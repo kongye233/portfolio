@@ -3,6 +3,46 @@ import { capabilities, experience, profile, projects, stats } from './content'
 
 const Grainient = lazy(() => import('./Grainient'))
 const withBase = path => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
+const SPECULAR_SELECTOR = [
+  '.header', '.logo-mark', '.header-cta', '.hero-card', '.portrait',
+  '.portrait figcaption', '.about-tags > span', '.about-tags > a',
+  '.experience-track em', '.project', '.project-foot a', '.strength-card',
+  '.strength-card > header span:first-child', '.strength-card > a',
+  '.strength-pills span', '.contact-sign > span', '.contact-card', '.contact-mark'
+].join(',')
+
+function useSpecularBorders() {
+  useEffect(() => {
+    const surfaces = [...document.querySelectorAll(SPECULAR_SELECTOR)]
+    surfaces.forEach((surface, index) => {
+      surface.classList.add('specular-border')
+      surface.style.setProperty('--specular-delay', `${index * -0.23}s`)
+    })
+
+    let frame = 0
+    const updateLight = event => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        surfaces.forEach(surface => {
+          const rect = surface.getBoundingClientRect()
+          const dx = Math.max(rect.left - event.clientX, 0, event.clientX - rect.right)
+          const dy = Math.max(rect.top - event.clientY, 0, event.clientY - rect.bottom)
+          const proximity = Math.max(0, 1 - Math.hypot(dx, dy) / 250)
+          const x = ((event.clientX - rect.left) / Math.max(rect.width, 1)) * 100
+          const y = ((event.clientY - rect.top) / Math.max(rect.height, 1)) * 100
+          surface.style.setProperty('--specular-x', `${Math.max(0, Math.min(100, x))}%`)
+          surface.style.setProperty('--specular-y', `${Math.max(0, Math.min(100, y))}%`)
+          surface.style.setProperty('--specular-opacity', `${0.26 + proximity * proximity * 0.74}`)
+        })
+      })
+    }
+    window.addEventListener('pointermove', updateLight, { passive: true })
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('pointermove', updateLight)
+    }
+  }, [])
+}
 
 function BelowHeroBackground() {
   const [active, setActive] = useState(false)
@@ -193,6 +233,7 @@ function Contact() {
 
 export default function App() {
   const [open, setOpen] = useState(false)
+  useSpecularBorders()
   useEffect(() => {
     const io = new IntersectionObserver(entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')), { threshold: .12 })
     document.querySelectorAll('.reveal').forEach(el => io.observe(el))

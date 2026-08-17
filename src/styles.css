@@ -95,3 +95,21 @@
 .strength-pills{position:absolute;z-index:2;left:28px;bottom:25px;width:240px;display:flex;flex-direction:column;gap:5px;transform:rotate(-4deg)}.strength-pills span{width:max-content;max-width:100%;padding:8px 22px;border-radius:999px;background:#f5f7ee;color:#10130c;font-size:8px;box-shadow:0 8px 20px rgba(75,98,17,.12)}.strength-pills span:nth-child(2){align-self:flex-start;background:#0c1009;color:#efffc7;transform:translateX(-10px)}.strength-pills span:nth-child(3){align-self:flex-end;background:rgba(224,255,139,.72)}
 @media(max-width:1100px){.strength-grid{height:460px}.strength-card h3{margin-top:18px;font-size:21px}.strength-card>p{max-width:320px}.strength-glyph{width:150px}.strength-pills{width:210px;bottom:20px}.strength-pills span{padding:7px 16px}}
 @media(max-width:760px){.capabilities{min-height:auto;padding-block:90px 80px}.strength-heading h2{font-size:25px}.strength-heading>span{display:none}.strength-grid{height:auto;grid-template-columns:1fr;grid-template-rows:none}.strength-card,.strength-card-1,.strength-card-2,.strength-card-3,.strength-card-4{grid-column:auto;min-height:280px}.strength-card h3{font-size:23px}.strength-card>p{font-size:10px}.strength-pills{bottom:34px}}
+
+/* Specular edge system adapted from the supplied React Bits reference */
+@property --specular-angle{syntax:"<angle>";inherits:false;initial-value:0deg}
+.header{position:fixed;z-index:100;background:rgba(8,10,10,.42);border-color:rgba(255,255,255,.14);box-shadow:0 18px 60px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.04);backdrop-filter:blur(22px) saturate(130%);-webkit-backdrop-filter:blur(22px) saturate(130%)}
+.specular-border{--specular-x:50%;--specular-y:50%;--specular-opacity:.26;--specular-angle:0deg}
+.logo-mark,.header-cta,.about-tags>span,.about-tags>a,.experience-track em,.project-foot a,.strength-card>header span:first-child,.strength-pills span,.contact-sign>span,.contact-card,.contact-mark{position:relative}
+.specular-border::before{content:"";position:absolute;z-index:6;inset:-1px;padding:1px;border-radius:inherit;background:conic-gradient(from var(--specular-angle) at var(--specular-x) var(--specular-y),transparent 0deg,rgba(255,255,255,.03) 44deg,rgba(255,255,255,.92) 58deg,rgba(201,255,47,.78) 64deg,rgba(255,255,255,.13) 80deg,transparent 112deg 218deg,rgba(255,255,255,.56) 232deg,rgba(201,255,47,.28) 241deg,transparent 270deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:var(--specular-opacity);pointer-events:none;filter:drop-shadow(0 0 5px rgba(201,255,47,.11));animation:specular-sweep 8.5s linear infinite;animation-delay:var(--specular-delay,0s);will-change:--specular-angle,opacity}
+.specular-border:hover{--specular-opacity:1}
+@keyframes specular-sweep{to{--specular-angle:360deg}}
+
+/* Circular personal mark, preserving the original image tones */
+.about-main{align-items:center}
+.about .portrait{justify-self:center;width:min(100%,328px);height:auto;aspect-ratio:1;border-radius:50%}
+.about .portrait-signature img{object-fit:contain;object-position:center;filter:none;transform:scale(.96)}
+.about .portrait figcaption{left:50%;right:auto;bottom:18px;max-width:calc(100% - 54px);white-space:nowrap;transform:translateX(-50%)}
+@media(max-width:1100px){.about .portrait{width:min(100%,300px);height:auto}}
+@media(max-width:760px){.about .portrait{width:min(82vw,320px);max-width:320px;height:auto;aspect-ratio:1}.header{position:fixed}}
+@media(prefers-reduced-motion:reduce){.specular-border::before{animation:none}.specular-border{--specular-opacity:.42}}
