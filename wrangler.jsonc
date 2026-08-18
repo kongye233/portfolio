@@ -6,6 +6,10 @@
     {
       "pattern": "kyoooo.com",
       "custom_domain": true
+    },
+    {
+      "pattern": "www.kyoooo.com",
+      "custom_domain": true
     }
   ],
   "assets": {
