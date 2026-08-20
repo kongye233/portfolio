@@ -1,5 +1,9 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { capabilities, experience, profile, projects, stats } from './content'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const Grainient = lazy(() => import('./Grainient'))
 const withBase = path => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
@@ -42,6 +46,134 @@ function useSpecularBorders() {
       window.removeEventListener('pointermove', updateLight)
     }
   }, [])
+}
+
+function usePortfolioMotion(rootRef) {
+  useLayoutEffect(() => {
+    const root = rootRef.current
+    if (!root) return undefined
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reducedMotion) {
+      root.classList.add('motion-reduced')
+      return () => root.classList.remove('motion-reduced')
+    }
+
+    root.classList.add('motion-ready')
+    const cleanups = []
+    const ctx = gsap.context(() => {
+      const opening = gsap.timeline({ defaults: { ease: 'power4.out' } })
+      opening
+        .set('.hero-opening-panel', { display: 'block', scaleY: 1 })
+        .set('.hero-media', { scale: 1.14 })
+        .to('.hero-opening-panel:first-child', { scaleY: 0, transformOrigin: 'top center', duration: 1.55, ease: 'power4.inOut' }, .12)
+        .to('.hero-opening-panel:last-child', { scaleY: 0, transformOrigin: 'bottom center', duration: 1.55, ease: 'power4.inOut' }, .22)
+        .to('.hero-media', { scale: 1.035, duration: 2.8, ease: 'power3.out' }, .15)
+        .from('.header', { y: -82, opacity: 0, duration: 1.25 }, .48)
+        .from('.hero-title-primary', { yPercent: 130, rotate: 2, skewY: 7, duration: 1.45 }, .62)
+        .from('.hero-title-secondary', { yPercent: 125, scaleX: .58, transformOrigin: 'left center', duration: 1.65 }, .76)
+        .from('.hero-title-star', { scale: 0, rotate: -130, opacity: 0, duration: 1.1 }, 1.13)
+        .from('.hero-statement', { y: 42, opacity: 0, duration: 1.1 }, 1.24)
+        .from('.hero-roles', { y: 28, opacity: 0, duration: 1 }, 1.36)
+        .fromTo('.hero-card',
+          { y: 94, opacity: 0, scale: .94 },
+          { y: 0, opacity: 1, scale: 1, duration: 1.2, stagger: .11, clearProps: 'transform,opacity' },
+          1.28,
+        )
+
+      const sectionConfigs = [
+        { section: '#about', cards: '.about-main > *, .experience-track article', images: '.portrait img' },
+        { section: '#works', cards: '.project', images: '.project-image img' },
+        { section: '#capabilities', cards: '.strength-card', images: '' },
+        { section: '#contact', cards: '.contact-lead > p, .contact-sign, .contact-card', images: '' },
+      ]
+
+      sectionConfigs.forEach(({ section, cards, images }) => {
+        const sectionEl = root.querySelector(section)
+        if (!sectionEl) return
+        const title = sectionEl.querySelector('[data-motion-title]')
+        const secondary = sectionEl.querySelector('[data-motion-secondary]')
+        const cardEls = gsap.utils.toArray(cards, sectionEl)
+        const imageEls = images ? gsap.utils.toArray(images, sectionEl) : []
+        const imageFrames = imageEls.map(image => image.closest('.project-image, .portrait')).filter(Boolean)
+        const timeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: sectionEl,
+            start: 'top 78%',
+            once: true,
+          },
+          defaults: { ease: 'power4.out' },
+        })
+
+        if (title) {
+          timeline.from(title, {
+            xPercent: -24,
+            yPercent: 72,
+            scaleX: .72,
+            rotate: 1.5,
+            clipPath: 'inset(0 100% 0 0)',
+            transformOrigin: 'left center',
+            duration: 1.55,
+          })
+        }
+        if (secondary) timeline.from(secondary, { y: 22, opacity: 0, duration: .9 }, '-=.88')
+        if (cardEls.length) {
+          timeline.from(cardEls, {
+            y: 96,
+            opacity: 0,
+            scale: .965,
+            duration: 1.25,
+            stagger: .14,
+            clearProps: 'transform,opacity',
+          }, '-=.58')
+        }
+        if (imageFrames.length) {
+          timeline.from(imageFrames, {
+            clipPath: 'inset(0 0 100% 0)',
+            duration: 1.55,
+            stagger: .1,
+          }, '<+.04')
+        }
+      })
+
+      const desktopMotion = gsap.matchMedia()
+      desktopMotion.add('(min-width: 761px)', () => {
+        const heroMedia = root.querySelector('.hero-media')
+        if (heroMedia) {
+          const moveX = gsap.quickTo(heroMedia, 'x', { duration: 1.25, ease: 'power3.out' })
+          const moveY = gsap.quickTo(heroMedia, 'y', { duration: 1.25, ease: 'power3.out' })
+          const handlePointer = event => {
+            moveX((event.clientX / window.innerWidth - .5) * 18)
+            moveY((event.clientY / window.innerHeight - .5) * 12)
+          }
+          window.addEventListener('pointermove', handlePointer, { passive: true })
+          cleanups.push(() => window.removeEventListener('pointermove', handlePointer))
+        }
+
+        gsap.utils.toArray('.project-image img, .portrait img', root).forEach(image => {
+          gsap.fromTo(image, { yPercent: -4 }, {
+            yPercent: 4,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: image.closest('.project, .portrait'),
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: 1.15,
+            },
+          })
+        })
+      })
+
+      cleanups.push(() => desktopMotion.revert())
+      requestAnimationFrame(() => ScrollTrigger.refresh())
+    }, root)
+
+    return () => {
+      cleanups.forEach(cleanup => cleanup())
+      ctx.revert()
+      root.classList.remove('motion-ready')
+    }
+  }, [rootRef])
 }
 
 function BelowHeroBackground() {
@@ -107,24 +239,13 @@ function Header({ open, setOpen }) {
 }
 
 function Hero() {
-  const mediaRef = useRef(null)
-  useEffect(() => {
-    const move = (e) => {
-      if (!mediaRef.current) return
-      const x = (e.clientX / innerWidth - .5) * 10
-      const y = (e.clientY / innerHeight - .5) * 8
-      mediaRef.current.style.setProperty('--px', `${x}px`)
-      mediaRef.current.style.setProperty('--py', `${y}px`)
-    }
-    window.addEventListener('pointermove', move)
-    return () => window.removeEventListener('pointermove', move)
-  }, [])
   return <section className="hero" id="top">
-    <div ref={mediaRef} className="hero-media" role="img" aria-label="抽象玻璃与黑色织物动态背景"><div className="prism" /></div>
+    <div className="hero-media" role="img" aria-label="抽象玻璃与黑色织物动态背景"><div className="prism" /></div>
     <div className="hero-vignette" />
+    <div className="hero-opening" aria-hidden="true"><span className="hero-opening-panel"/><span className="hero-opening-panel"/></div>
     <div className="shell hero-inner">
-      <div className="hero-copy reveal">
-        <h1><span>ZHANG JIE</span><br /><em>PORTFOLIO</em><i>✦</i></h1>
+      <div className="hero-copy">
+        <h1><span className="hero-word-mask"><span className="hero-title-primary">ZHANG JIE</span></span><br /><span className="hero-word-mask"><em className="hero-title-secondary">PORTFOLIO</em></span><i className="hero-title-star">✦</i></h1>
         <p className="hero-statement">用视觉系统与 AI 工作流<br />让品牌内容更清晰、更有辨识度</p>
         <p className="hero-roles">{profile.roles}</p>
       </div>
@@ -141,7 +262,7 @@ function Hero() {
 
 function About() {
   return <section className="section shell about" id="about">
-    <header className="about-heading reveal"><div><h2>WORK EXPERIENCE <Arrow /></h2><span>个人经历</span></div><span>01 / ABOUT ME</span></header>
+    <header className="about-heading"><div><h2 data-motion-title>WORK EXPERIENCE <Arrow /></h2><span data-motion-secondary>个人经历</span></div><span>01 / ABOUT ME</span></header>
     <div className="about-main">
       <figure className="portrait portrait-signature reveal"><img src={withBase('/assets/portrait-signature.jpg')} alt="张杰个人签名字图"/><figcaption>VISUAL / AI / BRAND DESIGNER</figcaption></figure>
       <div className="about-copy reveal">
@@ -168,7 +289,7 @@ function About() {
 
 function Works() {
   return <section className="section works" id="works">
-    <div className="shell"><header className="works-heading reveal"><div><h2>SELECTED WORKS <Arrow /></h2><span>精选作品</span></div><span>02 / PROJECT ARCHIVE</span></header>
+    <div className="shell"><header className="works-heading"><div><h2 data-motion-title>SELECTED WORKS <Arrow /></h2><span data-motion-secondary>精选作品</span></div><span>02 / PROJECT ARCHIVE</span></header>
       <div className="projects">
         {projects.map((p, index) => <article className={`project project-${index + 1} reveal`} key={p.title}>
           <div className="project-image"><img src={withBase(p.image)} alt={`${p.title} 项目视觉`} /></div>
@@ -192,7 +313,7 @@ function StrengthGlyph({ index }) {
 
 function Capabilities() {
   return <section className="section shell capabilities" id="capabilities">
-    <header className="strength-heading reveal"><div><h2>CORE STRENGTHS <Arrow /></h2><span>个人优势</span></div><span>03 / CAPABILITIES</span></header>
+    <header className="strength-heading"><div><h2 data-motion-title>CORE STRENGTHS <Arrow /></h2><span data-motion-secondary>个人优势</span></div><span>03 / CAPABILITIES</span></header>
     <div className="strength-grid">{capabilities.map(([title,desc],i) => <article key={title} className={`strength-card strength-card-${i+1} reveal`}>
       <header><span>0{i+1}</span><span>{i < 2 ? 'CORE' : 'SYSTEM'}</span></header>
       <h3>{title}<i/></h3><p>{desc}</p>
@@ -209,7 +330,7 @@ function Contact() {
     <div className="contact-layout">
       <div className="contact-lead reveal">
         <span>联系方式</span>
-        <h2>LET&apos;S CREATE<br/>THE NEXT<br/><em>GREAT WORK</em> <Arrow /></h2>
+        <h2 data-motion-title>LET&apos;S CREATE<br/>THE NEXT<br/><em>GREAT WORK</em> <Arrow /></h2>
         <p>如果你正在寻找一位兼具视觉表达、品牌思考与 AI 工作流能力的设计师，欢迎和我聊聊。</p>
         <a className="contact-sign" href={`mailto:${profile.email}`}><span>ZJ</span> START A CONVERSATION</a>
       </div>
@@ -233,14 +354,11 @@ function Contact() {
 
 export default function App() {
   const [open, setOpen] = useState(false)
+  const appRef = useRef(null)
   useSpecularBorders()
-  useEffect(() => {
-    const io = new IntersectionObserver(entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')), { threshold: .12 })
-    document.querySelectorAll('.reveal').forEach(el => io.observe(el))
-    return () => io.disconnect()
-  }, [])
-  return <><Header open={open} setOpen={setOpen}/><main><Hero/><div className="below-hero">
+  usePortfolioMotion(appRef)
+  return <div className="site" ref={appRef}><Header open={open} setOpen={setOpen}/><main><Hero/><div className="below-hero">
     <BelowHeroBackground />
     <div className="below-hero-content"><About/><Works/><Capabilities/></div>
-  </div><Contact/></main></>
+  </div><Contact/></main></div>
 }

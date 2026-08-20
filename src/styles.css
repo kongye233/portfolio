@@ -113,3 +113,34 @@
 @media(max-width:1100px){.about .portrait{width:min(100%,300px);height:auto}}
 @media(max-width:760px){.about .portrait{width:min(82vw,320px);max-width:320px;height:auto;aspect-ratio:1}.header{position:fixed}}
 @media(prefers-reduced-motion:reduce){.specular-border::before{animation:none}.specular-border{--specular-opacity:.42}}
+
+/* GSAP editorial motion system */
+.site{position:relative;overflow:clip}
+.hero-opening{position:absolute;z-index:12;inset:0;display:grid;grid-template-rows:1fr 1fr;pointer-events:none}
+.hero-opening-panel{display:none;background:#050606;transform:scaleY(0)}
+.hero-word-mask{display:inline-block;overflow:hidden;vertical-align:bottom}
+.hero-title-primary,.hero-title-secondary{display:inline-block;will-change:transform}
+.hero-title-star{display:inline-block;transform-origin:center;will-change:transform,opacity}
+.motion-ready .hero-media{animation:none}
+.motion-ready .hero-copy,.motion-ready .hero-card,.motion-ready [data-motion-title],.motion-ready .project,.motion-ready .strength-card,.motion-ready .contact-card{will-change:transform,opacity}
+.motion-ready .portrait,.motion-ready .project-image{will-change:clip-path}
+.motion-ready .project-image img,.motion-ready .portrait img{will-change:transform}
+.motion-ready .reveal{opacity:1;transform:none;transition:none}
+.about-heading,.works-heading,.strength-heading{overflow:visible}
+.about-heading>div,.works-heading>div,.strength-heading>div{overflow:hidden;padding-block:8px}
+.about-heading h2,.works-heading h2,.strength-heading h2{font-size:clamp(38px,4.25vw,72px);line-height:.88;transform-origin:left center}
+.contact-lead{overflow:hidden;padding-block:10px}
+.contact-lead h2{transform-origin:left center}
+@media(min-width:761px){
+  .motion-ready .project-image img{height:112%;top:-6%;position:relative;transform:scale(1.04)}
+  .motion-ready .portrait img{transform:scale(1.03)}
+}
+@media(max-width:760px){
+  .about-heading h2,.works-heading h2,.strength-heading h2{font-size:clamp(31px,9vw,42px)}
+  .hero-opening{grid-template-rows:52% 48%}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-opening{display:none}
+  .motion-reduced .reveal{opacity:1;transform:none;transition:none}
+  .motion-ready [data-motion-title],.motion-ready .project,.motion-ready .strength-card,.motion-ready .contact-card{will-change:auto}
+}
