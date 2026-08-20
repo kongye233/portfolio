@@ -5,6 +5,25 @@ import { capabilities, experience, profile, projects, stats } from './content'
 
 gsap.registerPlugin(ScrollTrigger)
 
+const MOTION = {
+  opening: {
+    curtain: 1.34,
+    background: 2.35,
+    title: 1.24,
+    titleWide: 1.42,
+    support: .86,
+    cards: .92,
+    cardStagger: .085,
+  },
+  section: {
+    title: 1.16,
+    support: .7,
+    cards: .94,
+    cardStagger: .095,
+    image: 1.18,
+  },
+}
+
 const Grainient = lazy(() => import('./Grainient'))
 const withBase = path => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
 const SPECULAR_SELECTOR = [
@@ -66,19 +85,19 @@ function usePortfolioMotion(rootRef) {
       opening
         .set('.hero-opening-panel', { display: 'block', scaleY: 1 })
         .set('.hero-media', { scale: 1.14 })
-        .to('.hero-opening-panel:first-child', { scaleY: 0, transformOrigin: 'top center', duration: 1.55, ease: 'power4.inOut' }, .12)
-        .to('.hero-opening-panel:last-child', { scaleY: 0, transformOrigin: 'bottom center', duration: 1.55, ease: 'power4.inOut' }, .22)
-        .to('.hero-media', { scale: 1.035, duration: 2.8, ease: 'power3.out' }, .15)
-        .from('.header', { y: -82, opacity: 0, duration: 1.25 }, .48)
-        .from('.hero-title-primary', { yPercent: 130, rotate: 2, skewY: 7, duration: 1.45 }, .62)
-        .from('.hero-title-secondary', { yPercent: 125, scaleX: .58, transformOrigin: 'left center', duration: 1.65 }, .76)
-        .from('.hero-title-star', { scale: 0, rotate: -130, opacity: 0, duration: 1.1 }, 1.13)
-        .from('.hero-statement', { y: 42, opacity: 0, duration: 1.1 }, 1.24)
-        .from('.hero-roles', { y: 28, opacity: 0, duration: 1 }, 1.36)
+        .to('.hero-opening-panel:first-child', { scaleY: 0, transformOrigin: 'top center', duration: MOTION.opening.curtain, ease: 'power4.inOut' }, .08)
+        .to('.hero-opening-panel:last-child', { scaleY: 0, transformOrigin: 'bottom center', duration: MOTION.opening.curtain, ease: 'power4.inOut' }, .16)
+        .to('.hero-media', { scale: 1.035, duration: MOTION.opening.background, ease: 'power3.out' }, .1)
+        .from('.header', { y: -82, opacity: 0, duration: 1.02 }, .34)
+        .from('.hero-title-primary', { yPercent: 130, rotate: 2, skewY: 7, duration: MOTION.opening.title }, .44)
+        .from('.hero-title-secondary', { yPercent: 125, scaleX: .58, transformOrigin: 'left center', duration: MOTION.opening.titleWide }, .55)
+        .from('.hero-title-star', { scale: 0, rotate: -130, opacity: 0, duration: .88 }, .88)
+        .from('.hero-statement', { y: 42, opacity: 0, duration: MOTION.opening.support }, .96)
+        .from('.hero-roles', { y: 28, opacity: 0, duration: MOTION.opening.support }, 1.05)
         .fromTo('.hero-card',
           { y: 94, opacity: 0, scale: .94 },
-          { y: 0, opacity: 1, scale: 1, duration: 1.2, stagger: .11, clearProps: 'transform,opacity' },
-          1.28,
+          { y: 0, opacity: 1, scale: 1, duration: MOTION.opening.cards, stagger: MOTION.opening.cardStagger, clearProps: 'transform,opacity' },
+          1.04,
         )
 
       const sectionConfigs = [
@@ -99,7 +118,7 @@ function usePortfolioMotion(rootRef) {
         const timeline = gsap.timeline({
           scrollTrigger: {
             trigger: sectionEl,
-            start: 'top 78%',
+            start: 'top 84%',
             once: true,
           },
           defaults: { ease: 'power4.out' },
@@ -113,26 +132,26 @@ function usePortfolioMotion(rootRef) {
             rotate: 1.5,
             clipPath: 'inset(0 100% 0 0)',
             transformOrigin: 'left center',
-            duration: 1.55,
+            duration: MOTION.section.title,
           })
         }
-        if (secondary) timeline.from(secondary, { y: 22, opacity: 0, duration: .9 }, '-=.88')
+        if (secondary) timeline.from(secondary, { y: 22, opacity: 0, duration: MOTION.section.support }, '-=.72')
         if (cardEls.length) {
           timeline.from(cardEls, {
             y: 96,
             opacity: 0,
             scale: .965,
-            duration: 1.25,
-            stagger: .14,
+            duration: MOTION.section.cards,
+            stagger: MOTION.section.cardStagger,
             clearProps: 'transform,opacity',
-          }, '-=.58')
+          }, '-=.48')
         }
         if (imageFrames.length) {
           timeline.from(imageFrames, {
             clipPath: 'inset(0 0 100% 0)',
-            duration: 1.55,
-            stagger: .1,
-          }, '<+.04')
+            duration: MOTION.section.image,
+            stagger: .08,
+          }, '<')
         }
       })
 
@@ -158,7 +177,7 @@ function usePortfolioMotion(rootRef) {
               trigger: image.closest('.project, .portrait'),
               start: 'top bottom',
               end: 'bottom top',
-              scrub: 1.15,
+              scrub: .82,
             },
           })
         })
