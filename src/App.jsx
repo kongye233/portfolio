@@ -286,7 +286,7 @@ function About() {
       <figure className="portrait portrait-signature reveal"><img src={withBase('/assets/portrait-signature.jpg')} alt="张杰个人签名字图"/><figcaption>VISUAL / AI / BRAND DESIGNER</figcaption></figure>
       <div className="about-copy reveal">
         <span className="about-kicker">ABOUT ME</span>
-        <h3>Hi, I am Zhang Jie!</h3><p className="intro">{profile.intro}</p>
+        <h3>Hi, I am Zhang Jie!</h3><div className="intro">{profile.intro.map(paragraph => <p key={paragraph}>{paragraph}</p>)}</div>
         <dl className="details">
           <div><dt>职业 / ROLE</dt><dd>Visual / AI / Brand Designer</dd></div>
           <div><dt>所在地 / LOCATION</dt><dd>{profile.location}</dd></div>
